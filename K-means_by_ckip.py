@@ -21,17 +21,13 @@ print(stopword_list)
 path = r'./02_data_warehouse'
 file_list = os.listdir(path)
 print("normal 文章數：{}".format(len(file_list)))
-article = []
+article = {}
 i=0
 for each_article in file_list:
     article_path = path + "/" + each_article
     with open(article_path, 'r', encoding = 'utf-8') as f:
         temp = f.read()
-        article.append("")
-        # print(temp)
-        for line in temp:
-            article[i] += line
-    i += 1
+        article[each_article] = temp
 print(article)
 
 
@@ -39,7 +35,7 @@ print(article)
 from ckiptagger import WS, POS, NER
 
 # define word_count function by ckip
-def word_count(test_data):
+def word_count(name ,test_data):
     """
     :param test_data: article string
     :return: ckip dict
@@ -59,69 +55,77 @@ def word_count(test_data):
 
     # print(ckip_word_list)
     ckip_dict = {}
+    ckip_dict["article_name"] = name
 
     for i in ckip_word_list:
         ckip_dict[i[0]] =i [1]
 
     return (ckip_dict)
 
+article_lst_dict = {}
+for j in article:
+    # print(j)
+    article_lst_dict[j] = word_count(j,article[j])
 
-# all_article = ""
-#
-# for j in article:
-#     all_article += j
-article_dict = word_count(article[0])
-print(article_dict)
+# for x in article_lst_dict:
+#     print(x,article_lst_dict[x])
 
+# # def getList(dict):
+# #     list = []
+# #     for key in dict.keys():
+# #         list.append(key)
+# #
+# #     return list
+# #
+# # def comb_key(dict_list, k):
+# #     list = []
+# #     for j in dict_list:
+# #         for i in j:
+# #             if i in list:
+# #                 pass
+# #             elif i in getList(j)[:k]:
+# #                 list.append(i)
+# #     return list
+# #
 
+# define combine key function for mutl article
+def comb_key(list, dict_list):
+    """
+    :param list: before list
+    :param dict_list: article dict
+    :return: after modify list
+    """
+    for j in dict_list:
+        if j in list:
+            pass
+        else:
+            list.append(j)
+    return list
 
+# produce columns
+columns = ["article_name"]
+content=[]
+for y in article_lst_dict:
+    comb_key(columns, article_lst_dict[y] )
+    content.append(article_lst_dict[y])
 
-# def getList(dict):
-#     list = []
-#     for key in dict.keys():
-#         list.append(key)
-#
-#     return list
-#
-# def comb_key(dict_list, k):
-#     list = []
-#     for j in dict_list:
-#         for i in j:
-#             if i in list:
-#                 pass
-#             elif i in getList(j)[:k]:
-#                 list.append(i)
-#     return list
-#
+print(columns)
+print(content)
 
-# # define combine key function for mutl article
-# def comb_key(list, dict_list):
-#     """
-#     :param list: before list
-#     :param dict_list: article dict
-#     :return: after modify list
-#     """
-#     for j in dict_list:
-#         for i in j:
-#             if i in list:
-#                 pass
-#             else:
-#                 list.append(i)
-#     return list
+dd = pd.DataFrame(data=content,columns=columns)
+dd = dd.set_index("article_name")
+dd = dd.sort_index(axis=0)
+dd = dd.fillna(value=0)
+print(dd)
 
+# import sklearn cluster
+from sklearn import cluster
 
-# dd = pd.DataFrame(A_1, index=[0])
-# print(dd)
+# KMeans 演算法
+kmeans_fit = cluster.KMeans(n_clusters = 4).fit(dd)
 
-
-# # import sklearn cluster
-# from sklearn import cluster
-#
-# # KMeans 演算法
-# kmeans_fit = cluster.KMeans(n_clusters = 5).fit(dd)
-#
-# # 印出分群結果
-# cluster_labels = kmeans_fit.labels_
-# print("分群結果：")
-# print(cluster_labels)
-# print("---")
+# 印出分群結果
+cluster_labels = kmeans_fit.labels_
+print("分群結果：")
+print(cluster_labels)
+print("---")
