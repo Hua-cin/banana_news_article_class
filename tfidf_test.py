@@ -143,7 +143,7 @@ for i, count in enumerate(countlist):
     scores = {word: tfidf(word, count, countlist) for word in count}
     sorted_words = sorted(scores.items(), key=lambda x: x[1], reverse=True)
     cd =[]
-    for word, score in sorted_words[:30]:
+    for word, score in sorted_words[:50]:
         print("\tWord: {}, TF-IDF: {}".format(word, round(score, 5)))
         cd.append(word)
     ab.append(cd)
