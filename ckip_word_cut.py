@@ -15,7 +15,7 @@ with open(stopword_path, 'r', encoding = 'utf-8') as f_stop:
     for temp in f_stop.readlines():
         stopword_list.append(temp.replace('。\n', ''))
         stopword_list.append(temp.replace('\n', ''))
-print(stopword_list)
+# print(stopword_list)
 
 # insert source data
 path = r'./02_data_warehouse'
@@ -46,7 +46,7 @@ for i in ws_results[0]:
         ckip_word_count[i] += 1
     else:
         ckip_word_count[i] = 1
-print(ckip_word_count)
+# print(ckip_word_count)
 
 ckip_word_list = [(k, ckip_word_count[k]) for k in ckip_word_count if (len(k)>1) and (k not in stopword_list)]
 ckip_word_list.sort(key=lambda item: item[1], reverse=True)
