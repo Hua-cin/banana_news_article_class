@@ -13,7 +13,6 @@ stopword_path = r'./01_ref_data/stopword.txt'
 stopword_list = []
 with open(stopword_path, 'r', encoding = 'utf-8') as f_stop:
     for temp in f_stop.readlines():
-        stopword_list.append(temp.replace('。\n', ''))
         stopword_list.append(temp.replace('\n', ''))
 print(stopword_list)
 
