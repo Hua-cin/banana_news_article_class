@@ -14,3 +14,4 @@ print(test.iloc[:,1:])
 #     if test["A"][i] == 0:
 #         test.iloc[i, :] = test.iloc[i, :] * 100
 # print(test)
+#
