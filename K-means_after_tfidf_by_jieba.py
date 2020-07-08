@@ -11,12 +11,14 @@ import os
 import jieba
 import math
 import pandas as pd
-# import sklearn cluster
 from sklearn import cluster
 import re
 
 def main():
+    '''
 
+    :return:
+    '''
 
 
     # insert related source data----------------------
@@ -61,43 +63,34 @@ def main():
     def n_containing(word, count_list):
         return sum(1 for count in count_list if word in count)
     def idf(word, count_list):
-        # print('{}'.format(len(count_list) / (1+n_containing(word, count_list))))
-        # print('{}'.format(math.log(len(count_list) / (1+n_containing(word, count_list)))))
-        # print('--')
         return math.log(1 + len(count_list) / (1+n_containing(word, count_list)))
     def tfidf(word, count, count_list):
-        # print('{}*{}'.format(tf(word, count), idf(word, count_list)))
         return tf(word, count) * idf(word, count_list)
     base = {}
     j = 0
     for i, count in enumerate(countlist):
-        # print("Top words in document {}".format(i+1))
         scores = {word: tfidf(word, count, countlist) for word in count}
         sorted_words = sorted(scores.items(), key=lambda x: x[1], reverse=True)
         cd ={}
         for word, score in sorted_words[0:100]:
-            # print("\tWord: {}, TF-IDF: {}".format(word, round(score, 5)))
             cd[word] = round(score, 5)
 
         base[j]=cd
         j += 1
-    # print(base)
-
-
-
+    # print(base, file = open('./01_ref_data/base.txt', 'w'))
+    #
+    # with open('./01_ref_data/base.txt', 'r', encoding='utf-8') as f:
+    #     base_temp = f.read()
+        # print(base_temp)
 
     base_copy = base.copy()
-    base_copy
 
     # insert sample
     # insert no related source data--------------------
     sample_path = r'./02_data_warehouse/sample'
     sample_file_list = os.listdir(sample_path)
 
-
     #---------------------------------
-
-
 
     content_dict = {}
     for each_article in sample_file_list:
@@ -111,7 +104,7 @@ def main():
             content_dict[each_article]=sample_text
     # print(sample_text)
 
-    print(content_dict)
+    # print(content_dict)
     for k in content_dict:
 
         sample_word_cut_dict = func_jieba(content_dict[k])
@@ -133,16 +126,15 @@ def main():
 
         h = pd.DataFrame(data=content, columns=columns)
 
-
-        h.iloc[:2, :] = h.iloc[:2, :] * 2000
-        # h.iloc[:1, :10] = h.iloc[:1, :10] * 1/3
+        # 修改數值, 相關改為 +1, 不相關改為 -1
+        # h.iloc[:2, :] = h.iloc[:2, :] * 2000
         h.iloc[1:2,:] = h.iloc[1:2,:] * (-1)
 
+        # 取得非香蕉部份
         late = h.iloc[:,1:]
 
-
+        # late dataframe 空值補0
         late = late.fillna(0)
-        # print(late.shape)
 
         for x in range(0,2):
             for y in late:
@@ -157,7 +149,6 @@ def main():
                 late.loc[2, z] =late.loc[2, z] * (-1)
         late['全部'] = [20,-19.5,0]
 
-
         # KMeans 演算法
         kmeans_fit = cluster.KMeans(n_clusters=2).fit(late)
 
@@ -165,23 +156,28 @@ def main():
         cluster_labels = kmeans_fit.labels_
 
         print("\n----------------")
-        print(k)
-        print("分群結果：")
-        print(cluster_labels)
+        print("{}\n分群結果：\n{}".format(k, cluster_labels))
 
+        # 判定結果
         if h.loc[2,'香蕉'] > 2:
             if cluster_labels[0]==cluster_labels[1]:
                 print("無相關")
+                result = False
             elif cluster_labels[1] == cluster_labels[2]:
                 print("無相關")
+                result = False
             else:
                 print("相關")
+                result = True
         else:
             print("無相關")
+            result = False
 
+    # 回傳結果
+    return result
 
-    # 使用pandas 將資料轉為csv檔
-    late.to_csv('./dd.csv', index=0, encoding="utf_8_sig")
+    # # 使用pandas 將資料轉為csv檔
+    # late.to_csv('./dd.csv', index=0, encoding="utf_8_sig")
 
 def func_jieba(text):
     '''
