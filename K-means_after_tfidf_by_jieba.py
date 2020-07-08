@@ -17,23 +17,7 @@ import re
 
 def main():
 
-    # insert sample
-    # insert no related source data--------------------
-    sample_path = r'./02_data_warehouse/sample'
-    sample_file_list = os.listdir(sample_path)
 
-    sample_text = ''
-    for each_article in sample_file_list:
-        article_path = sample_path + "/" + each_article
-        with open(article_path, 'r', encoding='utf-8') as f:
-            temp = f.read()
-            for line in temp:
-                sample_text += line
-    # print(sample_text)
-
-    sample_word_cut_dict = func_jieba(sample_text)
-    # print("sample")
-    # print(sample_word_cut_dict)
 
     # insert related source data----------------------
     related_path = r'./02_data_warehouse/related'
@@ -91,7 +75,7 @@ def main():
         scores = {word: tfidf(word, count, countlist) for word in count}
         sorted_words = sorted(scores.items(), key=lambda x: x[1], reverse=True)
         cd ={}
-        for word, score in sorted_words[0:150]:
+        for word, score in sorted_words[0:100]:
             # print("\tWord: {}, TF-IDF: {}".format(word, round(score, 5)))
             cd[word] = round(score, 5)
 
@@ -100,48 +84,101 @@ def main():
     # print(base)
 
 
-    base[2] = sample_word_cut_dict
-    # print(base)
-
-    columns = []
-    for i in range(3):
-        columns = comb_key(columns, base[i])
-
-    content = []
-
-    for y in base:
-        content.append(base[y])
-    # print(content)
-
-    h = pd.DataFrame(data=content, columns=columns)
-    h = h.fillna(0)
-
-    h.iloc[:2, :] = h.iloc[:2, :] * 2000
-    m_5 = ['價格', '颱風','產量','市場','農民', '採收']
-    if h.loc[2,"香蕉"] >= 4:
-        for i in m_5:
-            if h.loc[2,i] > 0:
-                h.loc[2,i] = h.loc[0,i]
 
 
-    late = h.iloc[:,1:]
+    base_copy = base.copy()
+    base_copy
 
-    # print(late)
+    # insert sample
+    # insert no related source data--------------------
+    sample_path = r'./02_data_warehouse/sample'
+    sample_file_list = os.listdir(sample_path)
 
-    # KMeans 演算法
-    kmeans_fit = cluster.KMeans(n_clusters=2).fit(late)
 
-    # 印出分群結果
-    cluster_labels = kmeans_fit.labels_
-    # print("分群結果：")
-    # print(cluster_labels)
+    #---------------------------------
 
-    if cluster_labels[0]==cluster_labels[1]:
-        print("無相關")
-    elif cluster_labels[1] == cluster_labels[2]:
-        print("無相關")
-    else:
-        print("相關")
+
+
+    content_dict = {}
+    for each_article in sample_file_list:
+        sample_text = ''
+        article_path = sample_path + "/" + each_article
+
+        with open(article_path, 'r', encoding='utf-8') as f:
+            temp = f.read()
+            for line in temp:
+                sample_text += line
+            content_dict[each_article]=sample_text
+    # print(sample_text)
+
+    print(content_dict)
+    for k in content_dict:
+
+        sample_word_cut_dict = func_jieba(content_dict[k])
+        # print("sample")
+        # print(sample_word_cut_dict)
+
+
+        base_copy[2] = sample_word_cut_dict
+        # print(base)
+
+        columns = []
+        for i in range(2):
+            columns = comb_key(columns, base_copy[i])
+
+        content = []
+
+        for y in base_copy:
+            content.append(base_copy[y])
+
+        h = pd.DataFrame(data=content, columns=columns)
+
+
+        h.iloc[:2, :] = h.iloc[:2, :] * 2000
+        # h.iloc[:1, :10] = h.iloc[:1, :10] * 1/3
+        h.iloc[1:2,:] = h.iloc[1:2,:] * (-1)
+
+        late = h.iloc[:,1:]
+
+
+        late = late.fillna(0)
+        # print(late.shape)
+
+        for x in range(0,2):
+            for y in late:
+                if late.loc[x, y]>0:
+                    late.loc[x, y] = 1
+                elif late.loc[x, y]<0:
+                    late.loc[x, y] = -1
+                else:
+                    late.loc[x, y] = 0
+        for z in late:
+            if late.loc[1, z] < 0:
+                late.loc[2, z] =late.loc[2, z] * (-1)
+        late['全部'] = [20,-19.5,0]
+
+
+        # KMeans 演算法
+        kmeans_fit = cluster.KMeans(n_clusters=2).fit(late)
+
+        # 印出分群結果
+        cluster_labels = kmeans_fit.labels_
+
+        print("\n----------------")
+        print(k)
+        print("分群結果：")
+        print(cluster_labels)
+
+        if h.loc[2,'香蕉'] > 2:
+            if cluster_labels[0]==cluster_labels[1]:
+                print("無相關")
+            elif cluster_labels[1] == cluster_labels[2]:
+                print("無相關")
+            else:
+                print("相關")
+        else:
+            print("無相關")
+
 
     # 使用pandas 將資料轉為csv檔
     late.to_csv('./dd.csv', index=0, encoding="utf_8_sig")
