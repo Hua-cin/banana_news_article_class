@@ -173,11 +173,13 @@ def main():
             print("無相關")
             result = False
 
-    # 回傳結果
-    return result
 
-    # # 使用pandas 將資料轉為csv檔
-    # late.to_csv('./dd.csv', index=0, encoding="utf_8_sig")
+    # 使用pandas 將資料轉為csv檔
+    late.to_csv('./dd.csv', index=0, encoding="utf_8_sig")
+
+    # # 回傳結果
+    # return result
+
 
 def func_jieba(text):
     '''
