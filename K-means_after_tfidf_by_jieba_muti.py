@@ -159,7 +159,7 @@ def main():
         print("{}\n分群結果：\n{}".format(k, cluster_labels))
 
         # 判定結果
-        if h.loc[2,'香蕉'] > 2:
+        if h.loc[2,'香蕉'] > 1:
             if cluster_labels[0]==cluster_labels[1]:
                 print("無相關")
                 result = False
